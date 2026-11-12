@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Folder, LoaderCircle, Save, Trash2, X } from 'lucide-react'
 import { api, type Host, type ServerGroup } from './types'
+import { confirmDiscardChanges } from './dialogs'
 
 export default function GroupDialog({ group, hosts, onClose, onSaved, onDeleted }: { group?: ServerGroup; hosts: Host[]; onClose: () => void; onSaved: (group: ServerGroup) => Promise<void>; onDeleted: () => Promise<void> }) {
   const dialog = useRef<HTMLDialogElement>(null)
@@ -8,6 +9,9 @@ export default function GroupDialog({ group, hosts, onClose, onSaved, onDeleted 
   const [members, setMembers] = useState(new Set(group?.hostIds ?? []))
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
+  const draft = JSON.stringify({ name, members: [...members].sort() })
+  const initialDraft = useRef(draft)
+  const close = () => { if (!busy && confirmDiscardChanges(draft !== initialDraft.current)) onClose() }
   const savedHosts = hosts.filter(host => !host.id.startsWith('demo-'))
   useEffect(() => { const element = dialog.current; element?.showModal(); element?.querySelector<HTMLInputElement>('input')?.focus(); return () => element?.close() }, [])
   const submit = async (event: React.FormEvent) => {
@@ -23,8 +27,8 @@ export default function GroupDialog({ group, hosts, onClose, onSaved, onDeleted 
     try { await api(`/groups/${group.id}`, 'DELETE', {}); await onDeleted(); onClose() }
     catch (error) { setError((error as Error).message) } finally { setBusy(false) }
   }
-  return <dialog ref={dialog} className="host-dialog group-dialog" aria-labelledby="group-dialog-title" onCancel={event => { if (busy) event.preventDefault(); else onClose() }} onClick={event => { if (event.target === dialog.current && !busy) onClose() }}><form onSubmit={submit}>
-    <div className="dialog-heading"><div className="dialog-icon"><Folder size={20} /></div><button type="button" className="icon-button" aria-label="Close group editor" disabled={busy} onClick={onClose}><X size={19} /></button></div>
+  return <dialog ref={dialog} className="host-dialog group-dialog" aria-labelledby="group-dialog-title" onCancel={event => { event.preventDefault(); close() }}><form onSubmit={submit}>
+    <div className="dialog-heading"><div className="dialog-icon"><Folder size={20} /></div><button type="button" className="icon-button" aria-label="Close group editor" disabled={busy} onClick={close}><X size={19} /></button></div>
     <h2 id="group-dialog-title">{group ? 'Edit server group' : 'Create server group'}</h2><p className="dialog-intro">Organize servers and view their logs together.</p>
     <fieldset className="dialog-fields" disabled={busy}>
       <label>Group name<input required maxLength={80} placeholder="Production" value={name} onChange={event => setName(event.target.value)} /></label>

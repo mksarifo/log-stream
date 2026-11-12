@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { ArrowRight, Check, Eye, FileKey2, Fingerprint, KeyRound, LoaderCircle, Save, Server, X } from 'lucide-react'
 import { api, type Credentials, type Host, type EditResult, type ParserMode } from './types'
 import ParserSelect from './ParserSelect'
+import { confirmDiscardChanges } from './dialogs'
 
 export default function HostDialog({ host, editing = false, onClose, onSaved }: { host?: Host; editing?: boolean; onClose: () => void; onSaved: (result?: EditResult) => void | Promise<void> }) {
   const dialog = useRef<HTMLDialogElement>(null)
@@ -18,6 +19,9 @@ export default function HostDialog({ host, editing = false, onClose, onSaved }: 
   const [probing, setProbing] = useState(false)
   const [error, setError] = useState('')
   const [visible, setVisible] = useState(false)
+  const draft = JSON.stringify({ name, address, port, username, paths, parser, credentials, fingerprint, trusted })
+  const initialDraft = useRef(draft)
+  const close = () => { if (!busy && confirmDiscardChanges(draft !== initialDraft.current)) onClose() }
   const probeAbort = useRef<AbortController | null>(null)
   useEffect(() => { dialog.current?.showModal(); dialog.current?.querySelector<HTMLInputElement>('input')?.focus(); const element = dialog.current; return () => { probeAbort.current?.abort(); element?.close() } }, [])
   const resetTrust = () => { setFingerprint(''); setTrusted(false) }
@@ -39,9 +43,9 @@ export default function HostDialog({ host, editing = false, onClose, onSaved }: 
       await onSaved(result); onClose()
     } catch (error) { setError((error as Error).message) } finally { setBusy(false) }
   }
-  return <dialog ref={dialog} className="host-dialog" aria-labelledby="host-dialog-title" onCancel={event => { if (busy) event.preventDefault(); else onClose() }} onClick={event => { if (event.target === dialog.current && !busy) onClose() }}>
+  return <dialog ref={dialog} className="host-dialog" aria-labelledby="host-dialog-title" onCancel={event => { event.preventDefault(); close() }}>
     <form onSubmit={submit}>
-      <div className="dialog-heading"><div className="dialog-icon"><Server size={20} /></div><button type="button" className="icon-button" aria-label="Close dialog" disabled={busy} onClick={onClose}><X size={19} /></button></div>
+      <div className="dialog-heading"><div className="dialog-icon"><Server size={20} /></div><button type="button" className="icon-button" aria-label="Close dialog" disabled={busy} onClick={close}><X size={19} /></button></div>
       <h2 id="host-dialog-title">{editing ? 'Edit connection' : host ? 'Reconnect host' : 'Connect a host'}</h2>
       <p className="muted dialog-intro">{editing ? 'Update this host while keeping its log sources.' : host ? `Provide SSH credentials for ${host.name}.` : 'Stream log files securely over SSH.'}</p>
       <fieldset className="dialog-fields" disabled={busy || probing}>
