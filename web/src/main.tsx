@@ -5,5 +5,7 @@ import '@fontsource-variable/dm-sans'
 import '@fontsource/ibm-plex-mono/latin-400.css'
 import '@fontsource/ibm-plex-mono/latin-500.css'
 import './style.css'
+import { applyTheme, savedTheme } from './themes'
 
+applyTheme(savedTheme())
 ReactDOM.createRoot(document.getElementById('root')!).render(<React.StrictMode><App /></React.StrictMode>)
