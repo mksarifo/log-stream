@@ -93,6 +93,7 @@ func (a *App) Handler(dist string) http.Handler {
 	mux.HandleFunc("POST /api/hosts", a.addHost)
 	mux.HandleFunc("DELETE /api/hosts/{id}", a.deleteHost)
 	mux.HandleFunc("PUT /api/hosts/{id}", a.updateHost)
+	mux.HandleFunc("POST /api/hosts/{id}/duplicate", a.duplicateHost)
 	mux.HandleFunc("PUT /api/sources/{id}", a.updateSource)
 	mux.HandleFunc("POST /api/hosts/{id}/start", a.startHost)
 	mux.HandleFunc("POST /api/hosts/{id}/stop", a.stopHost)

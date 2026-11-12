@@ -65,7 +65,7 @@ func logRoute(path string) string {
 	if len(parts) == 3 && parts[0] == "api" && parts[1] == "groups" {
 		return "/api/groups/{id}"
 	}
-	if len(parts) == 4 && parts[0] == "api" && parts[1] == "hosts" && (parts[3] == "start" || parts[3] == "stop") {
+	if len(parts) == 4 && parts[0] == "api" && parts[1] == "hosts" && (parts[3] == "start" || parts[3] == "stop" || parts[3] == "duplicate") {
 		return "/api/hosts/{id}/" + parts[3]
 	}
 	if strings.HasPrefix(path, "/api/") {

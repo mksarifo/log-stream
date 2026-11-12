@@ -190,6 +190,10 @@ export default function App() {
               </div>)}
               {!isDemo && <div className="host-actions">
                 <button title={`Edit connection ${host.name}`} aria-label={`Edit connection ${host.name}`} onClick={() => setEditingHost(host)}><Pencil size={11} />Edit</button>
+                <button title={`Duplicate connection ${host.name}`} aria-label={`Duplicate connection ${host.name}`} disabled={busy} onClick={() => void act(async () => {
+                  const result = await api<{ host: Host }>(`/hosts/${host.id}/duplicate`, 'POST', {})
+                  setNotice(`Created ${result.host.name}. Edit its settings or reconnect to start streaming.`); setReconnectTarget(result.host)
+                })}><Copy size={12} /></button>
                 <button title={`Reconnect ${host.name}`} onClick={() => setDialog(host)}>Reconnect</button>
                 <button title={`Stop ${host.name}`} aria-label={`Stop ${host.name}`} disabled={busy} onClick={() => void act(() => api(`/hosts/${host.id}/stop`, 'POST', {}))}><Unplug size={12} /></button>
                 <button title={`Remove ${host.name}`} aria-label={`Remove ${host.name}`} disabled={busy} onClick={() => { if (window.confirm(`Remove ${host.name} and stop its collectors?`)) void act(() => api(`/hosts/${host.id}`, 'DELETE', {})) }}><Trash2 size={12} /></button>
